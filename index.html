@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fairmont Bangkok Sukhumvit — SEO + AI Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f5f5;--surface:#fff;--s2:#f0f0f0;--s3:#e8e8e8;
+  --text:#0a0a0a;--t2:#4d4d4d;--t3:#7f7f7f;
+  --border:#e0e0e0;--border2:#ccc;
+  --pass-bg:#e2f5ec;--pass-tx:#065f46;
+  --warn-bg:#fef3dc;--warn-tx:#92400e;
+  --fail-bg:#fee8e8;--fail-tx:#b91c1c;
+  --up:#1D9E75;--down:#D85A30;--neu:#378ADD;
+}
+body{font-family:'Montserrat',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+a{color:inherit}
+.wrap{max-width:1300px;margin:0 auto;padding:24px 20px}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:var(--surface);border:0.5px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:20px}
+.hotel-name{font-size:16px;font-weight:700}
+.hotel-sub{font-size:11px;color:var(--t3);margin-top:2px}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;border:0.5px solid var(--border2);background:var(--s2);color:var(--t2);font-weight:600}
+.badge-warn{background:#fef3dc;color:#92400e;border-color:#f9c75080}
+.badge-ai{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
+.topbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{font-size:12px;padding:7px 16px;border-radius:6px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer;font-weight:700;font-family:inherit;transition:background .15s}
+.btn:hover{background:var(--s2)}
+.btn-dark{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
+.btn-dark:hover{background:#333}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:0.5px solid var(--border);margin-bottom:20px;overflow-x:auto}
+.tab{font-size:12px;font-weight:700;padding:9px 18px;cursor:pointer;color:var(--t3);border-bottom:2px solid transparent;margin-bottom:-0.5px;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;transition:color .15s}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--text);border-bottom-color:var(--text)}
+.panel{display:none}.panel.on{display:block}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:18px}
+.kpi{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px}
+.kpi-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
+.kpi-value{font-size:24px;font-weight:700;line-height:1}
+.kpi-sub{font-size:11px;color:var(--t3);margin-top:5px}
+.kpi-delta{font-size:11px;font-weight:600;margin-top:3px}
+.up{color:var(--up)}.down{color:var(--down)}.neu{color:var(--neu)}
+
+/* CARDS */
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.card-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:14px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);padding:6px 10px;border-bottom:0.5px solid var(--border)}
+.tbl td{padding:9px 10px;border-bottom:0.5px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover td{background:var(--s2)}
+.pill{display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:3px}
+.pill-brand{background:#0a0a0a;color:#fff}
+.pill-gap{background:#e8e8e8;color:#333}
+.pill-local{background:#4d4d4d;color:#fff}
+.pos-wrap{display:flex;align-items:center;gap:6px}
+.pos-bar{flex:1;height:4px;background:#e8e8e8;border-radius:2px;overflow:hidden}
+.pos-fill{height:100%;background:#0a0a0a;border-radius:2px}
+
+/* AUDIT */
+.audit-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.audit-item{border:0.5px solid var(--border);border-radius:8px;padding:10px 12px}
+.audit-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.audit-name{font-size:11px;font-weight:700}
+.audit-score{font-size:13px;font-weight:700}
+.s-hi{color:#1D9E75}.s-md{color:#BA7517}.s-lo{color:#D85A30}
+.score-bar{height:3px;background:#e8e8e8;border-radius:2px;overflow:hidden;margin-bottom:5px}
+.score-fill{height:100%;background:#0a0a0a;border-radius:2px}
+.audit-note{font-size:10px;color:var(--t3);line-height:1.4}
+
+/* TECH */
+.tech-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border)}
+.tech-row:last-child{border-bottom:none}
+.tech-ico{width:22px;height:22px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.t-pass{background:var(--pass-bg);color:var(--pass-tx)}
+.t-warn{background:var(--warn-bg);color:var(--warn-tx)}
+.t-fail{background:var(--fail-bg);color:var(--fail-tx)}
+.tech-name{font-size:12px;font-weight:600;flex:1}
+.tech-note{font-size:11px;color:var(--t3)}
+
+/* COMP */
+.comp-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.comp-name{font-size:11px;font-weight:600;width:145px;flex-shrink:0}
+.comp-bar-bg{flex:1;height:7px;background:#e8e8e8;border-radius:4px;overflow:hidden}
+.comp-bar-fill{height:100%;background:#0a0a0a;border-radius:4px}
+.comp-pos{font-size:11px;color:var(--t3);width:42px;text-align:right;flex-shrink:0}
+
+/* ACTIONS */
+.action-row{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:0.5px solid var(--border);border-radius:8px;cursor:pointer;margin-bottom:8px;transition:background .1s}
+.action-row:last-child{margin-bottom:0}
+.action-row:hover{background:var(--s2)}
+.action-row.done{opacity:.45}
+.action-row.done .a-title{text-decoration:line-through}
+.chk{width:18px;height:18px;border-radius:3px;border:0.5px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.chk.on{background:#0a0a0a;border-color:#0a0a0a}
+.chk svg{display:none}.chk.on svg{display:block}
+.a-title{font-size:12px;font-weight:700;margin-bottom:4px}
+.a-meta{display:flex;gap:5px;flex-wrap:wrap}
+.tag{font-size:10px;padding:2px 7px;border-radius:10px;background:var(--s2);color:var(--t2);font-weight:600}
+.p1{background:#0a0a0a;color:#fff}
+.p2{background:#4d4d4d;color:#fff}
+.prog-bar-bg{flex:1;height:5px;background:#e8e8e8;border-radius:3px;overflow:hidden}
+.prog-bar-fill{height:100%;background:#0a0a0a;border-radius:3px;transition:width .4s}
+
+/* AI PANEL */
+.ai-panel{border:0.5px solid var(--border2);border-radius:12px;padding:18px 20px;margin-bottom:14px;background:var(--surface)}
+.ai-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.ai-dot{width:8px;height:8px;border-radius:50%;background:#0a0a0a;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.ai-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.ai-model{font-size:10px;color:var(--t3);margin-left:auto}
+.ai-desc{font-size:12px;color:var(--t3);margin-bottom:12px;line-height:1.6}
+
+.quick-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.qbtn{font-size:11px;padding:5px 11px;border-radius:20px;border:0.5px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;font-family:inherit;font-weight:600;transition:all .1s}
+.qbtn:hover{background:var(--surface);color:var(--text);border-color:#0a0a0a}
+
+textarea.prompt{width:100%;min-height:72px;border:0.5px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;font-family:inherit;color:var(--text);background:var(--s2);resize:vertical;outline:none}
+textarea.prompt:focus{border-color:#0a0a0a;background:var(--surface)}
+.prompt-actions{display:flex;gap:8px;margin-top:8px;align-items:center}
+.hint{font-size:10px;color:var(--t3);margin-left:auto}
+
+.chat-history{display:flex;flex-direction:column;gap:10px;margin-top:14px;max-height:500px;overflow-y:auto}
+.msg-user{background:#0a0a0a;color:#fff;padding:9px 14px;border-radius:8px;font-size:12px;align-self:flex-end;max-width:80%;line-height:1.5}
+.msg-ai{background:var(--s2);padding:12px 14px;border-radius:8px;font-size:12px;line-height:1.7;align-self:flex-start;max-width:92%;white-space:pre-wrap;word-wrap:break-word}
+.msg-ai.thinking{color:var(--t3);font-style:italic}
+.msg-ai.streaming::after{content:'▌';animation:blink .7s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* LLM CARDS */
+.llm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:14px}
+.llm-card{border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;background:var(--surface)}
+.llm-name{font-size:13px;font-weight:700;margin-bottom:3px}
+.llm-status{font-size:11px;font-weight:600;margin-bottom:8px}
+.llm-bar-bg{height:6px;background:#e8e8e8;border-radius:3px;overflow:hidden;margin-bottom:8px}
+.llm-bar-fill{height:100%;border-radius:3px}
+.llm-note{font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:10px}
+.llm-test{font-size:11px;padding:4px 12px;border-radius:20px;border:0.5px solid var(--border2);background:var(--s2);color:var(--t2);cursor:pointer;font-family:inherit;font-weight:600}
+.llm-test:hover{background:var(--surface);color:var(--text);border-color:#0a0a0a}
+
+/* CONTENT STUDIO */
+.suggest-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.suggest-card{border:0.5px solid var(--border);border-radius:10px;padding:14px 16px}
+.suggest-type{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
+.suggest-item{font-size:12px;padding:8px 10px;background:var(--s2);border-radius:6px;margin-bottom:6px;line-height:1.5;cursor:pointer;transition:background .1s;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.suggest-item:hover{background:#e8e8e8}
+.suggest-item:last-child{margin-bottom:0}
+.suggest-item-text{flex:1}
+.copy-lbl{font-size:10px;color:var(--t3);flex-shrink:0;margin-top:1px}
+
+/* LLM TIPS */
+.tip-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:0.5px solid var(--border)}
+.tip-row:last-child{border-bottom:none}
+.tip-num{width:22px;height:22px;border-radius:50%;background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.tip-text{font-size:12px;color:var(--t2);line-height:1.6}
+.tip-bold{font-weight:700;color:var(--text)}
+
+/* INSIGHT BOX */
+.insight{background:#0a0a0a;border-radius:8px;padding:14px 16px;margin-top:14px}
+.insight-title{font-size:9px;font-weight:700;letter-spacing:2px;color:#666;text-transform:uppercase;margin-bottom:8px}
+.insight-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:5px;font-size:11px;color:#ccc;line-height:1.5}
+.insight-dot{width:4px;height:4px;border-radius:50%;background:#555;flex-shrink:0;margin-top:6px}
+
+/* AUTO RECS */
+.rec-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.rec-card{border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;background:var(--surface)}
+.rec-type{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
+.rec-score{font-size:22px;font-weight:700;margin-bottom:4px}
+.rec-label{font-size:11px;color:var(--t3);margin-bottom:10px}
+.rec-items{display:flex;flex-direction:column;gap:5px}
+.rec-item{font-size:11px;padding:6px 9px;background:var(--s2);border-radius:5px;line-height:1.4;color:var(--t2);display:flex;gap:6px;align-items:flex-start}
+.rec-icon{flex-shrink:0;font-size:11px}
+
+/* FOOTER */
+.footer{text-align:center;font-size:10px;color:var(--t3);margin-top:24px;padding:16px 0;border-top:0.5px solid var(--border);letter-spacing:1px}
+
+@media(max-width:768px){
+  .two-col,.three-col,.suggest-grid,.rec-grid,.audit-grid,.llm-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div>
+      <div class="hotel-name">Fairmont Bangkok Sukhumvit</div>
+      <div class="hotel-sub">SEO + AI Dashboard &nbsp;·&nbsp; Week of <span id="wk-date">—</span> &nbsp;·&nbsp; Updated <span id="upd-time">—</span></div>
+    </div>
+    <div class="topbar-right">
+      <span class="badge badge-warn">GA4 restricted</span>
+      <span class="badge badge-ai">Claude AI</span>
+      <button class="btn" onclick="setTime()">Refresh</button>
+      <button class="btn btn-dark" onclick="window.print()">Export PDF</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab on"  onclick="showTab('seo',this)">SEO Overview</button>
+    <button class="tab"     onclick="showTab('ai',this)">AI SEO Advisor</button>
+    <button class="tab"     onclick="showTab('llm',this)">LLM Visibility</button>
+    <button class="tab"     onclick="showTab('content',this)">AI Content Studio</button>
+    <button class="tab"     onclick="showTab('actions',this)">Action Plan</button>
+  </div>
+
+  <!-- ═══ TAB 1: SEO OVERVIEW ═══ -->
+  <div class="panel on" id="tab-seo">
+
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">Organic visibility</div><div class="kpi-value">NEW</div><div class="kpi-sub">Week 1 baseline</div><div class="kpi-delta neu">Establishing</div></div>
+      <div class="kpi"><div class="kpi-label">Title tag score</div><div class="kpi-value">6<span style="font-size:14px;font-weight:400">/10</span></div><div class="kpi-sub">Needs refinement</div><div class="kpi-delta down">Too generic</div></div>
+      <div class="kpi"><div class="kpi-label">Page speed mobile</div><div class="kpi-value">~52</div><div class="kpi-sub">PageSpeed Insights</div><div class="kpi-delta down">Below 65</div></div>
+      <div class="kpi"><div class="kpi-label">Schema markup</div><div class="kpi-value">3<span style="font-size:14px;font-weight:400">/10</span></div><div class="kpi-sub">No Hotel schema</div><div class="kpi-delta down">P1 fix needed</div></div>
+      <div class="kpi"><div class="kpi-label">OTA presence</div><div class="kpi-value" style="font-size:17px;padding-top:4px">Strong</div><div class="kpi-sub">4 platforms live</div><div class="kpi-delta up">Expedia · TripAdvisor</div></div>
+      <div class="kpi"><div class="kpi-label">LLM visibility</div><div class="kpi-value" style="font-size:17px;padding-top:4px">Partial</div><div class="kpi-sub">ChatGPT: Yes · Gemini: No</div><div class="kpi-delta neu">Perplexity: Partial</div></div>
+      <div class="kpi"><div class="kpi-label">Tasks complete</div><div class="kpi-value" id="kpi-pct">0%</div><div class="kpi-sub" id="kpi-count">0 of 8</div><div class="kpi-delta neu">This week</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Keyword rankings tracker</div>
+      <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Keyword</th><th>Vol/mo</th><th style="min-width:150px">Position</th><th>WoW</th><th>Status</th><th>Priority action</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:700">Fairmont Bangkok Sukhumvit</td><td>5,400</td><td><div class="pos-wrap"><span style="font-weight:700;min-width:32px">#1</span><div class="pos-bar"><div class="pos-fill" style="width:100%"></div></div></div></td><td>—</td><td><span class="pill pill-brand">Brand</span></td><td style="color:var(--t3);font-size:11px">Maintain · push sitelinks schema</td></tr>
+          <tr><td style="font-weight:700">Fairmont Bangkok</td><td>8,100</td><td><div class="pos-wrap"><span style="font-weight:700;min-width:32px">#2</span><div class="pos-bar"><div class="pos-fill" style="width:95%"></div></div></div></td><td>—</td><td><span class="pill pill-brand">Brand</span></td><td style="color:var(--t3);font-size:11px">Schema · brand consistency</td></tr>
+          <tr><td style="font-weight:700">luxury hotel Bangkok Sukhumvit</td><td>1,900</td><td><div class="pos-wrap"><span style="font-weight:700;min-width:32px">15</span><div class="pos-bar"><div class="pos-fill" style="width:57%"></div></div></div></td><td><span class="neu" style="font-weight:700">NEW</span></td><td><span class="pill pill-gap">Gap</span></td><td style="color:var(--t3);font-size:11px">Optimise H1 + keyword density</td></tr>
+          <tr><td style="font-weight:700">best hotel Sukhumvit Bangkok</td><td>1,300</td><td><div class="pos-wrap"><span style="font-weight:700;min-width:32px">20</span><div class="pos-bar"><div class="pos-fill" style="width:40%"></div></div></div></td><td><span class="neu" style="font-weight:700">NEW</span></td><td><span class="pill pill-gap">Gap</span></td><td style="color:var(--t3);font-size:11px">FAQ schema + gather reviews</td></tr>
+          <tr><td style="font-weight:700">hotel near BTS Phrom Phong</td><td>880</td><td><div class="pos-wrap"><span style="font-weight:700;min-width:32px">22+</span><div class="pos-bar"><div class="pos-fill" style="width:30%"></div></div></div></td><td><span class="neu" style="font-weight:700">NEW</span></td><td><span class="pill pill-local">Local</span></td><td style="color:var(--t3);font-size:11px">Claim Google Business Profile</td></tr>
+          <tr><td style="font-weight:700">rooftop bar Bangkok Sukhumvit</td><td>2,400</td><td><div class="pos-wrap"><span style="font-weight:700;min-width:32px;color:#bbb">NR</span><div class="pos-bar"><div class="pos-fill" style="width:0%"></div></div></div></td><td>—</td><td><span class="pill pill-gap">Gap</span></td><td style="color:var(--t3);font-size:11px">Dining/rooftop page SEO</td></tr>
+          <tr><td style="font-weight:700">Bangkok luxury spa hotel</td><td>1,000</td><td><div class="pos-wrap"><span style="font-weight:700;min-width:32px;color:#bbb">NR</span><div class="pos-bar"><div class="pos-fill" style="width:0%"></div></div></div></td><td>—</td><td><span class="pill pill-gap">Gap</span></td><td style="color:var(--t3);font-size:11px">Expand spa page content</td></tr>
+          <tr><td style="font-weight:700">5 star hotel Bangkok</td><td>6,600</td><td><div class="pos-wrap"><span style="font-weight:700;min-width:32px;color:#bbb">NR</span><div class="pos-bar"><div class="pos-fill" style="width:0%"></div></div></div></td><td>—</td><td><span class="pill pill-gap">Gap</span></td><td style="color:var(--t3);font-size:11px">Build domain authority first</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">On-page audit</div>
+        <div class="audit-grid">
+          <div class="audit-item"><div class="audit-top"><span class="audit-name">Title tag</span><span class="audit-score s-md">6/10</span></div><div class="score-bar"><div class="score-fill" style="width:60%"></div></div><div class="audit-note">Too generic — 'Luxury Hotel Bangkok' is hyper-competitive</div></div>
+          <div class="audit-item"><div class="audit-top"><span class="audit-name">Meta description</span><span class="audit-score s-lo">4/10</span></div><div class="score-bar"><div class="score-fill" style="width:40%"></div></div><div class="audit-note">Auto-generated by Google — needs crafted copy</div></div>
+          <div class="audit-item"><div class="audit-top"><span class="audit-name">H1 heading</span><span class="audit-score s-md">5/10</span></div><div class="score-bar"><div class="score-fill" style="width:50%"></div></div><div class="audit-note">JS-rendered — may not be crawlable</div></div>
+          <div class="audit-item"><div class="audit-top"><span class="audit-name">Schema markup</span><span class="audit-score s-lo">3/10</span></div><div class="score-bar"><div class="score-fill" style="width:30%"></div></div><div class="audit-note">No Hotel schema — blocking rich results</div></div>
+          <div class="audit-item"><div class="audit-top"><span class="audit-name">Content depth</span><span class="audit-score s-hi">7/10</span></div><div class="score-bar"><div class="score-fill" style="width:70%"></div></div><div class="audit-note">Strong copy. Missing structured FAQ</div></div>
+          <div class="audit-item"><div class="audit-top"><span class="audit-name">Internal linking</span><span class="audit-score s-md">6/10</span></div><div class="score-bar"><div class="score-fill" style="width:60%"></div></div><div class="audit-note">Nav OK — missing contextual body links</div></div>
+          <div class="audit-item"><div class="audit-top"><span class="audit-name">Image alt text</span><span class="audit-score s-md">5/10</span></div><div class="score-bar"><div class="score-fill" style="width:50%"></div></div><div class="audit-note">JS images likely missing alt for Googlebot</div></div>
+          <div class="audit-item"><div class="audit-top"><span class="audit-name">Page speed mobile</span><span class="audit-score s-md">5/10</span></div><div class="score-bar"><div class="score-fill" style="width:50%"></div></div><div class="audit-note">~52/100 — JS SPA, LCP likely &gt;3.5s</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title">Technical health</div>
+          <div class="tech-row"><div class="tech-ico t-pass">✓</div><span class="tech-name">HTTPS / SSL</span><span class="tech-note">Secure on fairmont.com</span></div>
+          <div class="tech-row"><div class="tech-ico t-pass">✓</div><span class="tech-name">Mobile-friendly</span><span class="tech-note">Responsive confirmed</span></div>
+          <div class="tech-row"><div class="tech-ico t-warn">!</div><span class="tech-name">XML sitemap</span><span class="tech-note">Verify in Search Console</span></div>
+          <div class="tech-row"><div class="tech-ico t-warn">!</div><span class="tech-name">Robots.txt</span><span class="tech-note">JS SPA may block crawl</span></div>
+          <div class="tech-row"><div class="tech-ico t-fail">✗</div><span class="tech-name">Hotel schema markup</span><span class="tech-note">No JSON-LD detected</span></div>
+          <div class="tech-row"><div class="tech-ico t-fail">✗</div><span class="tech-name">JavaScript rendering</span><span class="tech-note">Googlebot may miss content</span></div>
+          <div class="tech-row"><div class="tech-ico t-fail">✗</div><span class="tech-name">Google Business Profile</span><span class="tech-note">Not yet claimed/verified</span></div>
+          <div class="tech-row"><div class="tech-ico t-warn">!</div><span class="tech-name">Core Web Vitals</span><span class="tech-note">Est. fail on mobile LCP</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Competitor SERP positions</div>
+          <div class="comp-row"><span class="comp-name">Fairmont Bangkok</span><div class="comp-bar-bg"><div class="comp-bar-fill" style="width:100%"></div></div><span class="comp-pos">#1–3</span></div>
+          <div class="comp-row"><span class="comp-name">Park Hyatt Bangkok</span><div class="comp-bar-bg"><div class="comp-bar-fill" style="width:82%"></div></div><span class="comp-pos">#4–7</span></div>
+          <div class="comp-row"><span class="comp-name">Marriott Marquis</span><div class="comp-bar-bg"><div class="comp-bar-fill" style="width:78%"></div></div><span class="comp-pos">#3–6</span></div>
+          <div class="comp-row"><span class="comp-name">JW Marriott BKK</span><div class="comp-bar-bg"><div class="comp-bar-fill" style="width:68%"></div></div><span class="comp-pos">#5–8</span></div>
+          <div class="comp-row"><span class="comp-name">Kempinski Bangkok</span><div class="comp-bar-bg"><div class="comp-bar-fill" style="width:50%"></div></div><span class="comp-pos">#8–14</span></div>
+          <div class="comp-row"><span class="comp-name">SO/ Bangkok</span><div class="comp-bar-bg"><div class="comp-bar-fill" style="width:36%"></div></div><span class="comp-pos">#10–18</span></div>
+          <div class="insight">
+            <div class="insight-title">Key insights</div>
+            <div class="insight-row"><div class="insight-dot"></div><span>All top 3 competitors have Hotel schema — fastest gap to close</span></div>
+            <div class="insight-row"><div class="insight-dot"></div><span>Marriott/Hyatt have DR 80+. Fairmont.com (Accor) also strong — leverage it</span></div>
+            <div class="insight-row"><div class="insight-dot"></div><span>SO/ Bangkok (same Accor group) outranks Fairmont — cross-link opportunity</span></div>
+            <div class="insight-row"><div class="insight-dot"></div><span>Untapped: 'hotel near BTS Phrom Phong' and 'pet-friendly hotel Sukhumvit'</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Weekly charts</div>
+      <div class="two-col">
+        <div><div style="font-size:11px;color:var(--t3);margin-bottom:8px">Keyword search volume by target</div><div style="position:relative;height:200px"><canvas id="kwChart"></canvas></div></div>
+        <div><div style="font-size:11px;color:var(--t3);margin-bottom:8px">On-page audit radar (week 1 baseline)</div><div style="position:relative;height:200px"><canvas id="radarChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 2: AI SEO ADVISOR ═══ -->
+  <div class="panel" id="tab-ai">
+    <div class="rec-grid">
+      <div class="rec-card">
+        <div class="rec-type">Auto analysis</div>
+        <div class="rec-score s-lo">3 Critical</div>
+        <div class="rec-label">Issues blocking rankings</div>
+        <div class="rec-items">
+          <div class="rec-item"><span class="rec-icon">✗</span><span>Hotel schema not implemented — blocking rich results in SERP</span></div>
+          <div class="rec-item"><span class="rec-icon">✗</span><span>Google Business Profile unclaimed — critical for local SEO</span></div>
+          <div class="rec-item"><span class="rec-icon">✗</span><span>JS rendering may hide content from Googlebot</span></div>
+        </div>
+      </div>
+      <div class="rec-card">
+        <div class="rec-type">Quick wins</div>
+        <div class="rec-score s-md">5 Actions</div>
+        <div class="rec-label">Under 2 hours each</div>
+        <div class="rec-items">
+          <div class="rec-item"><span class="rec-icon">→</span><span>Write homepage meta description (30 min)</span></div>
+          <div class="rec-item"><span class="rec-icon">→</span><span>Update title tags on Rooms, Dining, Offers (1h)</span></div>
+          <div class="rec-item"><span class="rec-icon">→</span><span>Add alt text to hero images (1h)</span></div>
+          <div class="rec-item"><span class="rec-icon">→</span><span>Submit sitemap in Search Console (20 min)</span></div>
+          <div class="rec-item"><span class="rec-icon">→</span><span>Benchmark PageSpeed score (30 min)</span></div>
+        </div>
+      </div>
+      <div class="rec-card">
+        <div class="rec-type">Keyword opportunities</div>
+        <div class="rec-score s-hi">4 Gaps</div>
+        <div class="rec-label">Untapped search volume</div>
+        <div class="rec-items">
+          <div class="rec-item"><span class="rec-icon">↑</span><span>rooftop bar Bangkok Sukhumvit — 2,400/mo, not ranked</span></div>
+          <div class="rec-item"><span class="rec-icon">↑</span><span>luxury hotel Bangkok Sukhumvit — 1,900/mo, pos. 15</span></div>
+          <div class="rec-item"><span class="rec-icon">↑</span><span>Bangkok luxury spa hotel — 1,000/mo, not ranked</span></div>
+          <div class="rec-item"><span class="rec-icon">↑</span><span>hotel near BTS Phrom Phong — 880/mo, pos. 22+</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-panel">
+      <div class="ai-hdr">
+        <div class="ai-dot"></div>
+        <span class="ai-label">Claude — SEO Advisor</span>
+        <span class="ai-model">claude-sonnet-4-20250514 · Fairmont Bangkok context loaded</span>
+      </div>
+      <div class="ai-desc">Ask anything about SEO strategy, keyword opportunities, content, or technical fixes — Claude has full context about this property pre-loaded.</div>
+      <div class="quick-row">
+        <button class="qbtn" onclick="setQ('ai','What are the top 3 SEO quick wins for Fairmont Bangkok Sukhumvit this week?')">Top 3 quick wins</button>
+        <button class="qbtn" onclick="setQ('ai','Write an optimised title tag for Fairmont Bangkok Sukhumvit homepage under 60 characters')">Optimise title tag</button>
+        <button class="qbtn" onclick="setQ('ai','Write a 155-character meta description for the Fairmont Bangkok Sukhumvit homepage with a booking CTA')">Write meta description</button>
+        <button class="qbtn" onclick="setQ('ai','How can Fairmont Bangkok rank for rooftop bar Bangkok Sukhumvit? 2,400 monthly searches, currently not ranked.')">Rank for rooftop bar</button>
+        <button class="qbtn" onclick="setQ('ai','Compare Fairmont Bangkok Sukhumvit SEO gaps vs Park Hyatt Bangkok — what should we prioritise?')">vs Park Hyatt</button>
+        <button class="qbtn" onclick="setQ('ai','Write SEO-optimised H1 and intro paragraph for Fairmont Bangkok Sukhumvit spa page targeting Bangkok luxury spa hotel')">Spa page copy</button>
+      </div>
+      <textarea class="prompt" id="ai-q" placeholder="Ask about strategy, keywords, content, technical fixes... (Ctrl+Enter to send)"></textarea>
+      <div class="prompt-actions">
+        <button class="btn btn-dark" onclick="ask('ai')">Ask Claude</button>
+        <button class="btn" onclick="clearChat('ai')">Clear</button>
+        <span class="hint" id="ai-status"></span>
+      </div>
+      <div class="chat-history" id="ai-hist"></div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 3: LLM VISIBILITY ═══ -->
+  <div class="panel" id="tab-llm">
+    <div class="card">
+      <div class="card-title">LLM / AI search visibility — does Fairmont Bangkok appear when people ask AI chatbots?</div>
+      <div class="llm-grid">
+        <div class="llm-card">
+          <div class="llm-name">ChatGPT (OpenAI)</div>
+          <div class="llm-status" style="color:var(--up)">Mentioned</div>
+          <div class="llm-bar-bg"><div class="llm-bar-fill" style="width:70%;background:var(--up)"></div></div>
+          <div class="llm-note">Appears in responses to "luxury hotels Bangkok Sukhumvit" — brand name recognised. Not always top recommendation yet.</div>
+          <button class="llm-test" onclick="testLLM('What are the best luxury hotels in Bangkok near Sukhumvit BTS?')">Test this prompt</button>
+        </div>
+        <div class="llm-card">
+          <div class="llm-name">Perplexity AI</div>
+          <div class="llm-status" style="color:#BA7517">Partial</div>
+          <div class="llm-bar-bg"><div class="llm-bar-fill" style="width:45%;background:#BA7517"></div></div>
+          <div class="llm-note">Appears for direct brand searches. Missing from generic "best 5-star hotel Bangkok" queries — no schema to anchor citations.</div>
+          <button class="llm-test" onclick="testLLM('Best 5-star hotel near BTS Asok or Phrom Phong Bangkok?')">Test this prompt</button>
+        </div>
+        <div class="llm-card">
+          <div class="llm-name">Google Gemini</div>
+          <div class="llm-status" style="color:var(--down)">Not appearing</div>
+          <div class="llm-bar-bg"><div class="llm-bar-fill" style="width:15%;background:var(--down)"></div></div>
+          <div class="llm-note">Not surfaced in AI overviews for hotel queries. Missing Hotel schema and low PageSpeed score are likely causes.</div>
+          <button class="llm-test" onclick="testLLM('Luxury hotel Bangkok Sukhumvit with rooftop pool and spa')">Test this prompt</button>
+        </div>
+        <div class="llm-card">
+          <div class="llm-name">Claude (Anthropic)</div>
+          <div class="llm-status" style="color:var(--up)">Mentioned</div>
+          <div class="llm-bar-bg"><div class="llm-bar-fill" style="width:65%;background:var(--up)"></div></div>
+          <div class="llm-note">Brand appears when asked about Fairmont or luxury Sukhumvit hotels. General queries need content depth to improve ranking.</div>
+          <button class="llm-test" onclick="testLLM('What luxury hotels are in Sukhumvit Bangkok?')">Test this prompt</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-panel">
+      <div class="ai-hdr">
+        <div class="ai-dot"></div>
+        <span class="ai-label">LLM Prompt Tester</span>
+        <span class="ai-model">Tests how Fairmont appears in AI chatbot answers</span>
+      </div>
+      <div class="ai-desc">Type a search query someone might ask ChatGPT or Perplexity. Claude will answer naturally, then analyse how and why Fairmont Bangkok did or did not appear — with specific recommendations to improve visibility.</div>
+      <div class="quick-row">
+        <button class="qbtn" onclick="setQ('llm','What are the best luxury hotels in Bangkok Sukhumvit?')">Best luxury hotels Bangkok</button>
+        <button class="qbtn" onclick="setQ('llm','Where should I stay near Phrom Phong BTS Bangkok?')">Near Phrom Phong BTS</button>
+        <button class="qbtn" onclick="setQ('llm','Best rooftop bar hotel Bangkok Sukhumvit')">Rooftop bar hotel</button>
+        <button class="qbtn" onclick="setQ('llm','Pet friendly 5-star hotel Bangkok')">Pet friendly luxury hotel</button>
+        <button class="qbtn" onclick="setQ('llm','Best hotel with spa in Bangkok for couples')">Couples spa hotel Bangkok</button>
+      </div>
+      <textarea class="prompt" id="llm-q" placeholder="Type a prompt someone would ask ChatGPT or Perplexity... (Ctrl+Enter to send)"></textarea>
+      <div class="prompt-actions">
+        <button class="btn btn-dark" onclick="ask('llm')">Test prompt</button>
+        <button class="btn" onclick="clearChat('llm')">Clear</button>
+        <span class="hint" id="llm-status"></span>
+      </div>
+      <div class="chat-history" id="llm-hist"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">How to improve LLM / AI search visibility</div>
+      <div class="tip-row"><div class="tip-num">1</div><div class="tip-text"><span class="tip-bold">Add Hotel JSON-LD schema</span> — LLMs like Perplexity and Gemini cite structured data to anchor hotel facts. Single biggest LLM visibility lever. Implement LodgingBusiness + Hotel + FAQPage types.</div></div>
+      <div class="tip-row"><div class="tip-num">2</div><div class="tip-text"><span class="tip-bold">Build topical authority content</span> — LLMs draw on long-form authoritative web content. Pillar articles on 'luxury Bangkok Sukhumvit hotels', rooftop dining, and spa wellness help Fairmont appear in generative answers.</div></div>
+      <div class="tip-row"><div class="tip-num">3</div><div class="tip-text"><span class="tip-bold">Earn OTA citations</span> — ChatGPT and Perplexity frequently cite Expedia, TripAdvisor, and Booking.com. Your strong OTA presence is already working — maintain review volume and recency.</div></div>
+      <div class="tip-row"><div class="tip-num">4</div><div class="tip-text"><span class="tip-bold">Get press and editorial mentions</span> — Forbes Travel, Condé Nast Traveller, and travel blogs that LLMs trust as sources. PR and media outreach directly improves AI chatbot citation rate.</div></div>
+      <div class="tip-row"><div class="tip-num">5</div><div class="tip-text"><span class="tip-bold">Optimise for 'People Also Ask'</span> — FAQ content on your website that answers common hotel questions is often pulled verbatim into AI overviews. Add a structured FAQ section to the homepage and key landing pages.</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 4: AI CONTENT STUDIO ═══ -->
+  <div class="panel" id="tab-content">
+    <div class="suggest-grid">
+      <div class="suggest-card">
+        <div class="suggest-type">Title tags — ready to use</div>
+        <div class="suggest-item" onclick="copyItem(this,'Fairmont Bangkok Sukhumvit | 5-Star Hotel on Sukhumvit 20')"><span class="suggest-item-text">Fairmont Bangkok Sukhumvit | 5-Star Hotel on Sukhumvit 20</span><span class="copy-lbl">copy</span></div>
+        <div class="suggest-item" onclick="copyItem(this,'Luxury Spa Bangkok | Fairmont Bangkok Sukhumvit')"><span class="suggest-item-text">Luxury Spa Bangkok | Fairmont Bangkok Sukhumvit</span><span class="copy-lbl">copy</span></div>
+        <div class="suggest-item" onclick="copyItem(this,'Rooftop Bar & Restaurants Bangkok | Fairmont Bangkok Sukhumvit')"><span class="suggest-item-text">Rooftop Bar & Restaurants Bangkok | Fairmont Bangkok Sukhumvit</span><span class="copy-lbl">copy</span></div>
+        <div class="suggest-item" onclick="copyItem(this,'Luxury Rooms & Suites Bangkok Sukhumvit | Fairmont Bangkok')"><span class="suggest-item-text">Luxury Rooms & Suites Bangkok Sukhumvit | Fairmont Bangkok</span><span class="copy-lbl">copy</span></div>
+        <div class="suggest-item" onclick="copyItem(this,'Family Hotel Bangkok Sukhumvit | Kids Club | Fairmont Bangkok')"><span class="suggest-item-text">Family Hotel Bangkok Sukhumvit | Kids Club | Fairmont Bangkok</span><span class="copy-lbl">copy</span></div>
+      </div>
+      <div class="suggest-card">
+        <div class="suggest-type">Meta descriptions — ready to use</div>
+        <div class="suggest-item" onclick="copyItem(this,`Experience Thailand's first Fairmont — 5-star luxury at Sukhumvit 20. Rooftop bar, award-winning spa & Fairmont Gold. Book direct for best rates.`)"><span class="suggest-item-text">Experience Thailand's first Fairmont — 5-star luxury at Sukhumvit 20. Rooftop bar, award-winning spa & Fairmont Gold. Book direct for best rates.</span><span class="copy-lbl">copy</span></div>
+        <div class="suggest-item" onclick="copyItem(this,'Escape to Fairmont Spa Bangkok — hammam, sauna, hydrotherapy & Thai healing rituals in the heart of Sukhumvit. Book your treatment today.')"><span class="suggest-item-text">Escape to Fairmont Spa Bangkok — hammam, sauna, hydrotherapy & Thai healing rituals in the heart of Sukhumvit. Book your treatment today.</span><span class="copy-lbl">copy</span></div>
+        <div class="suggest-item" onclick="copyItem(this,'Bangkok&apos;s most elevated rooftop bar — The Rooftop at Fairmont Bangkok Sukhumvit. Panoramic skyline views, cocktails & dining above the city.')"><span class="suggest-item-text">Bangkok's most elevated rooftop bar — The Rooftop at Fairmont Bangkok Sukhumvit. Panoramic skyline views, cocktails & dining above the city.</span><span class="copy-lbl">copy</span></div>
+      </div>
+      <div class="suggest-card">
+        <div class="suggest-type">Gap keywords to add to pages</div>
+        <div class="suggest-item"><span class="suggest-item-text">luxury hotel Sukhumvit Bangkok</span><span class="copy-lbl">1,900/mo</span></div>
+        <div class="suggest-item"><span class="suggest-item-text">rooftop bar Bangkok Sukhumvit</span><span class="copy-lbl">2,400/mo</span></div>
+        <div class="suggest-item"><span class="suggest-item-text">hotel near BTS Phrom Phong</span><span class="copy-lbl">880/mo</span></div>
+        <div class="suggest-item"><span class="suggest-item-text">pet friendly hotel Bangkok</span><span class="copy-lbl">720/mo</span></div>
+        <div class="suggest-item"><span class="suggest-item-text">Bangkok luxury spa hotel</span><span class="copy-lbl">1,000/mo</span></div>
+        <div class="suggest-item"><span class="suggest-item-text">family hotel Bangkok Sukhumvit</span><span class="copy-lbl">720/mo</span></div>
+        <div class="suggest-item"><span class="suggest-item-text">Fairmont Gold Bangkok</span><span class="copy-lbl">320/mo</span></div>
+      </div>
+      <div class="suggest-card">
+        <div class="suggest-type">Content briefs — click to generate</div>
+        <div class="suggest-item" onclick="genContent('Write a full SEO content brief for the Fairmont Bangkok Sukhumvit spa page targeting Bangkok luxury spa hotel — include target keywords, H1, H2 structure, word count recommendation, and 5 FAQ questions')"><span class="suggest-item-text">Spa page content brief</span><span class="copy-lbl">generate ↗</span></div>
+        <div class="suggest-item" onclick="genContent('Write an SEO content brief for the Fairmont Bangkok Sukhumvit rooftop bar page targeting rooftop bar Bangkok Sukhumvit — 2,400 monthly searches')"><span class="suggest-item-text">Rooftop bar content brief</span><span class="copy-lbl">generate ↗</span></div>
+        <div class="suggest-item" onclick="genContent('Write 6 FAQ questions and detailed answers for the Fairmont Bangkok Sukhumvit homepage targeting common luxury hotel Bangkok search queries. Format for FAQPage schema.')"><span class="suggest-item-text">Homepage FAQ schema content</span><span class="copy-lbl">generate ↗</span></div>
+        <div class="suggest-item" onclick="genContent('Write SEO-optimised copy for the Fairmont Bangkok Sukhumvit family page — H1, intro paragraph, and 3 section headers — targeting family hotel Bangkok Sukhumvit')"><span class="suggest-item-text">Family page copy</span><span class="copy-lbl">generate ↗</span></div>
+        <div class="suggest-item" onclick="genContent('Write 10 internal linking anchor text suggestions for Fairmont Bangkok Sukhumvit, linking from the homepage to spa, dining, rooms, and offers pages')"><span class="suggest-item-text">Internal linking anchors</span><span class="copy-lbl">generate ↗</span></div>
+      </div>
+    </div>
+
+    <div class="ai-panel">
+      <div class="ai-hdr">
+        <div class="ai-dot"></div>
+        <span class="ai-label">AI Content Generator</span>
+        <span class="ai-model">claude-sonnet-4-20250514 · SEO-optimised for luxury hospitality</span>
+      </div>
+      <div class="ai-desc">Generate SEO-optimised content for any page — title tags, meta descriptions, H1s, body copy, FAQs, or full content briefs. All output is tailored to Fairmont Bangkok Sukhumvit's brand and target keywords.</div>
+      <div class="quick-row">
+        <button class="qbtn" onclick="setQ('content','Write an SEO title tag and meta description for the Fairmont Bangkok Sukhumvit homepage under 60 and 155 characters respectively')">Title + meta</button>
+        <button class="qbtn" onclick="setQ('content','Write a 300-word SEO-optimised introduction for the Fairmont Bangkok Sukhumvit homepage targeting luxury hotel Bangkok Sukhumvit')">Homepage intro</button>
+        <button class="qbtn" onclick="setQ('content','Generate 8 People Also Ask questions and answers about Fairmont Bangkok Sukhumvit for the homepage FAQ section')">FAQ questions</button>
+        <button class="qbtn" onclick="setQ('content','Write 5 alt text descriptions for luxury hotel images at Fairmont Bangkok Sukhumvit — pool, spa, rooftop, lobby, and room')">Image alt text</button>
+      </div>
+      <textarea class="prompt" id="content-q" placeholder="Describe the content you need... (Ctrl+Enter to send)"></textarea>
+      <div class="prompt-actions">
+        <button class="btn btn-dark" onclick="ask('content')">Generate</button>
+        <button class="btn" onclick="clearChat('content')">Clear</button>
+        <span class="hint" id="content-status"></span>
+      </div>
+      <div class="chat-history" id="content-hist"></div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 5: ACTION PLAN ═══ -->
+  <div class="panel" id="tab-actions">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div class="card-title" style="margin-bottom:0">Weekly action plan — Mon 17 → Sun 23 Mar 2026</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="prog-bar-bg" style="width:140px"><div class="prog-bar-fill" id="prog-fill" style="width:0%"></div></div>
+          <span style="font-size:12px;font-weight:700" id="prog-label">0 / 8 complete</span>
+        </div>
+      </div>
+      <div class="action-row" onclick="toggleTask(this)"><div class="chk"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="flex:1"><div class="a-title">Claim & optimise Google Business Profile</div><div class="a-meta"><span class="tag p1">P1</span><span class="tag">Marketing</span><span class="tag">Tue 18 Mar</span><span class="tag">2h</span><span class="tag" style="background:#e2f5ec;color:#065f46">High impact</span></div></div></div>
+      <div class="action-row" onclick="toggleTask(this)"><div class="chk"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="flex:1"><div class="a-title">Implement Hotel JSON-LD schema on homepage</div><div class="a-meta"><span class="tag p1">P1</span><span class="tag">Dev</span><span class="tag">Wed 19 Mar</span><span class="tag">3h</span><span class="tag" style="background:#e2f5ec;color:#065f46">High impact</span></div></div></div>
+      <div class="action-row" onclick="toggleTask(this)"><div class="chk"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="flex:1"><div class="a-title">Write & publish homepage meta description</div><div class="a-meta"><span class="tag p1">P1</span><span class="tag">Marketing</span><span class="tag">Mon 17 Mar</span><span class="tag">30m</span><span class="tag" style="background:#e2f5ec;color:#065f46">High impact</span></div></div></div>
+      <div class="action-row" onclick="toggleTask(this)"><div class="chk"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="flex:1"><div class="a-title">Audit robots.txt & sitemap via Search Console</div><div class="a-meta"><span class="tag p2">P2</span><span class="tag">Dev</span><span class="tag">Wed 19 Mar</span><span class="tag">1h</span><span class="tag" style="background:#fef3dc;color:#92400e">Med impact</span></div></div></div>
+      <div class="action-row" onclick="toggleTask(this)"><div class="chk"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="flex:1"><div class="a-title">Optimise spa page for 'Bangkok luxury spa hotel'</div><div class="a-meta"><span class="tag p2">P2</span><span class="tag">Content</span><span class="tag">Fri 21 Mar</span><span class="tag">3h</span><span class="tag" style="background:#fef3dc;color:#92400e">Med impact</span></div></div></div>
+      <div class="action-row" onclick="toggleTask(this)"><div class="chk"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="flex:1"><div class="a-title">Add alt text to all homepage hero images</div><div class="a-meta"><span class="tag p2">P2</span><span class="tag">Marketing</span><span class="tag">Thu 20 Mar</span><span class="tag">1h</span><span class="tag" style="background:#fef3dc;color:#92400e">Med impact</span></div></div></div>
+      <div class="action-row" onclick="toggleTask(this)"><div class="chk"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="flex:1"><div class="a-title">Benchmark PageSpeed Insights score (mobile)</div><div class="a-meta"><span class="tag">P3</span><span class="tag">Dev</span><span class="tag">Fri 21 Mar</span><span class="tag">1h</span><span class="tag" style="background:#fef3dc;color:#92400e">Med impact</span></div></div></div>
+      <div class="action-row" onclick="toggleTask(this)"><div class="chk"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="flex:1"><div class="a-title">Update title tags: Rooms, Dining, Offers pages</div><div class="a-meta"><span class="tag">P3</span><span class="tag">Marketing</span><span class="tag">Fri 21 Mar</span><span class="tag">1h</span><span class="tag" style="background:#fef3dc;color:#92400e">Med impact</span></div></div></div>
+    </div>
+  </div>
+
+  <div class="footer">FAIRMONT BANGKOK SUKHUMVIT &nbsp;·&nbsp; SEO + AI DASHBOARD &nbsp;·&nbsp; CONFIDENTIAL &nbsp;·&nbsp; DATA: SEARCH CONSOLE + MANUAL SERP + CLAUDE AI</div>
+</div>
+
+<script>
+const SYSTEM = `You are an expert SEO consultant specialising in luxury hospitality, working for Fairmont Bangkok Sukhumvit — Thailand's first Fairmont hotel at 10 Sukhumvit Soi 20, Bangkok.
+
+KEY PROPERTY FACTS:
+- 416 rooms/suites including Fairmont Gold lounge
+- Restaurants: Bang Ko Brasserie (French all-day dining), The Rooftop bar, Wiggle Room (immersive dining)
+- Fairmont Spa: hammam, sauna, ice bath, steam room, hydrotherapy, couple suites
+- Kids & Cats Club, pet-friendly (cats/dogs up to 5kg)
+- Walking distance to BTS Asok and BTS Phrom Phong
+- Opened early 2026 — Thailand's first Fairmont
+- Grand ballroom with 12m ceiling, co-working space, private boardrooms
+- Le Labo amenities, Nespresso machines in all rooms
+
+CURRENT SEO STATUS:
+- Brand keywords (#1-3), non-brand mostly unranked
+- Title tag 6/10, meta description 4/10, H1 5/10, schema 3/10
+- No Hotel JSON-LD schema implemented — CRITICAL gap
+- Google Business Profile unclaimed — CRITICAL gap
+- Page speed ~52/100 mobile, JS-heavy SPA
+- Strong OTA presence: Expedia, TripAdvisor, Hotels.com, ALL (Accor)
+- No GA4 access (corporate restriction)
+
+GAP KEYWORDS TO TARGET:
+- rooftop bar Bangkok Sukhumvit: 2,400/mo, not ranked
+- luxury hotel Bangkok Sukhumvit: 1,900/mo, position 15
+- Bangkok luxury spa hotel: 1,000/mo, not ranked
+- hotel near BTS Phrom Phong: 880/mo, position 22+
+- family hotel Bangkok Sukhumvit: 720/mo, not ranked
+- pet friendly hotel Bangkok: 720/mo, not ranked
+
+TOP COMPETITORS: Park Hyatt Bangkok, Marriott Marquis Bangkok Queen's Park, JW Marriott Bangkok, Sindhorn Kempinski, SO/ Bangkok (same Accor group)
+
+Be specific, actionable, and concise. Use clear formatting with line breaks for readability.`;
+
+const LLM_EXTRA = `\n\nSPECIAL INSTRUCTION FOR LLM VISIBILITY TESTS: The user is testing a search prompt to see how Fairmont Bangkok Sukhumvit appears in AI chatbot answers. 
+
+First, answer the question naturally as any AI assistant would — give a genuine, helpful response to the hotel query.
+
+Then add a divider line "---" followed by a section titled "LLM VISIBILITY ANALYSIS:" that covers:
+1. Whether and how Fairmont Bangkok Sukhumvit appeared in your answer
+2. Why it did or did not appear (schema, content depth, OTA citations, etc.)
+3. 3 specific, actionable recommendations to improve its visibility in AI search answers like this one`;
+
+const CONTENT_EXTRA = `\n\nSPECIAL INSTRUCTION FOR CONTENT GENERATION: Generate high-quality, SEO-optimised, ready-to-use content for Fairmont Bangkok Sukhumvit. The tone should be luxurious but approachable, matching a 5-star international hotel brand. Content must be naturally keyword-rich without being stuffed. Format output clearly with headers where appropriate.`;
+
+function showTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.getElementById('tab-' + id).classList.add('on');
+  btn.classList.add('on');
+}
+
+function setTime() {
+  const now = new Date();
+  document.getElementById('upd-time').textContent = now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('wk-date').textContent = now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+}
+setTime();
+
+function toggleTask(el) {
+  el.querySelector('.chk').classList.toggle('on');
+  el.classList.toggle('done');
+  const all = document.querySelectorAll('.action-row').length;
+  const done = document.querySelectorAll('.action-row.done').length;
+  const pct = Math.round(done/all*100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = done + ' / ' + all + ' complete';
+  document.getElementById('kpi-pct').textContent = pct + '%';
+  document.getElementById('kpi-count').textContent = done + ' of ' + all;
+}
+
+function setQ(type, text) {
+  const tab = {ai:'tab-ai',llm:'tab-llm',content:'tab-content'}[type];
+  const btn = document.querySelectorAll('.tab')[{ai:1,llm:2,content:3}[type]];
+  showTab({ai:'ai',llm:'llm',content:'content'}[type], btn);
+  document.getElementById(type+'-q').value = text;
+  document.getElementById(type+'-q').focus();
+}
+
+function clearChat(type) {
+  document.getElementById(type+'-hist').innerHTML = '';
+}
+
+function testLLM(prompt) {
+  setQ('llm', prompt);
+  setTimeout(() => ask('llm'), 100);
+}
+
+function genContent(prompt) {
+  setQ('content', prompt);
+  setTimeout(() => ask('content'), 100);
+}
+
+function copyItem(el, text) {
+  navigator.clipboard.writeText(text).catch(()=>{});
+  const lbl = el.querySelector('.copy-lbl');
+  if(lbl){ lbl.textContent='copied!'; setTimeout(()=>lbl.textContent='copy',1500); }
+}
+
+async function ask(type) {
+  const inputEl = document.getElementById(type+'-q');
+  const histEl = document.getElementById(type+'-hist');
+  const statusEl = document.getElementById(type+'-status');
+  const prompt = inputEl.value.trim();
+  if(!prompt) return;
+  inputEl.value = '';
+
+  const userDiv = document.createElement('div');
+  userDiv.className = 'msg-user';
+  userDiv.textContent = prompt;
+  histEl.appendChild(userDiv);
+
+  const aiDiv = document.createElement('div');
+  aiDiv.className = 'msg-ai thinking';
+  aiDiv.textContent = 'Claude is thinking...';
+  histEl.appendChild(aiDiv);
+  histEl.scrollTop = histEl.scrollHeight;
+
+  if(statusEl) statusEl.textContent = 'Thinking...';
+
+  let extra = '';
+  if(type === 'llm') extra = LLM_EXTRA;
+  if(type === 'content') extra = CONTENT_EXTRA;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM + extra,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || 'No response received.';
+    aiDiv.className = 'msg-ai';
+    aiDiv.textContent = text;
+  } catch(e) {
+    aiDiv.className = 'msg-ai';
+    aiDiv.textContent = 'Error connecting to Claude. Please try again.';
+  }
+
+  if(statusEl) statusEl.textContent = '';
+  histEl.scrollTop = histEl.scrollHeight;
+}
+
+['ai','llm','content'].forEach(type => {
+  document.getElementById(type+'-q').addEventListener('keydown', e => {
+    if(e.key==='Enter' && (e.ctrlKey||e.metaKey)) ask(type);
+  });
+});
+
+// Charts
+new Chart(document.getElementById('kwChart'),{
+  type:'bar',
+  data:{
+    labels:['5-star BKK','Rooftop bar','Fairmont BKK','Luxury Sukhumvit','Spa BKK','Best hotel','BTS Phrom'],
+    datasets:[{
+      data:[6600,2400,5400,1900,1000,1300,880],
+      backgroundColor:['#ccc','#0a0a0a','#0a0a0a','#ccc','#ccc','#ccc','#ccc'],
+      borderRadius:4,borderSkipped:false
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'Vol: '+ctx.parsed.y.toLocaleString()+'/mo'}}},
+    scales:{
+      x:{ticks:{color:'#7f7f7f',font:{size:9,family:'Montserrat'},maxRotation:40},grid:{display:false}},
+      y:{ticks:{color:'#7f7f7f',font:{size:9,family:'Montserrat'},callback:v=>v>=1000?(v/1000)+'K':v},grid:{color:'#f0f0f0'}}
+    }
+  }
+});
+
+new Chart(document.getElementById('radarChart'),{
+  type:'radar',
+  data:{
+    labels:['Title tag','Meta desc','H1','Content','Schema','Int. links','Alt text','Speed'],
+    datasets:[{
+      label:'Score',
+      data:[6,4,5,7,3,6,5,5],
+      backgroundColor:'rgba(10,10,10,0.07)',
+      borderColor:'#0a0a0a',
+      borderWidth:2,
+      pointBackgroundColor:'#0a0a0a',
+      pointRadius:3
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{r:{
+      min:0,max:10,
+      ticks:{stepSize:2,color:'#bbb',font:{size:9,family:'Montserrat'},backdropColor:'transparent'},
+      pointLabels:{color:'#4d4d4d',font:{size:10,family:'Montserrat',weight:'600'}},
+      grid:{color:'#e8e8e8'},angleLines:{color:'#e8e8e8'}
+    }}
+  }
+});
+</script>
+</body>
+</html>
