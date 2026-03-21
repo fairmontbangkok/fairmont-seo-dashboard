@@ -1,0 +1,22 @@
+{
+  "updated": "21 Mar 2026 11:59",
+  "week_label": "Week of 21 Mar 2026",
+  "google_ads": {
+    "impressions": "0",
+    "clicks": "0",
+    "cost": "$0",
+    "conversions": "0",
+    "ctr": "0.00%"
+  },
+  "facebook_ads": {
+    "impressions": "0",
+    "clicks": "0",
+    "spend": "$0"
+  },
+  "seo": {
+    "title_tag_score": "6/10",
+    "pagespeed_mobile": "~52",
+    "schema_score": "3/10",
+    "llm_visibility": "8/100"
+  }
+}
