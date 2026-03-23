@@ -10,7 +10,7 @@ A self-contained weekly SEO performance dashboard for internal use.
 
 ## Live URL (GitHub Pages)
 
-Once deployed: `https://YOUR-USERNAME.github.io/fairmont-seo-dashboard`
+Once deployed: `https://YOUR-USERNAME.github.io/fairmont-bangkok-digital-marketing-hub`
 
 ## Update every Monday
 
